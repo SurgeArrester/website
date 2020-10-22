@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block content %}
+        <div class="row search_bar">
+            <div class="center-block" style="width:40%">
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="navbar-default">
+                                <ul class="nav navbar-nav">
+                                    <li><a href="{{ url_for('atomic_search') }}", class='active-page'>List</a></li>
+                                    <li><a href="{{ url_for('graphical_search') }}">Graphical</a></li>
+                                    <li><a href="{{ url_for('similarity_heatmap') }}">Heatmap</a></li>
+                                    <li><a href="{{ url_for('similarity') }}">Two Compound</a></li>
+                            </ul>
+                        </div>
+                    </nav>
+            
+
+        <div>
+            <div id="search_div">
+                    <form class="form form-horizontal" method="post" role="form">
+                        <div class="form-row">
+                            <div class="col-md-7">
+                                    {{ wtf.form_field( form.search_bar) }}
+                            </div>
+                            <div class="col-md-3">
+                                    
+                            </div>
+                            <div class="col-md-2" style="text-align: right;">
+                                    {{ wtf.form_field( form.results_to_display ) }}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-5">
+                                    {{ wtf.form_field( form.must_contain) }}
+                            </div>
+                            <div class="col-md-2">
+                                    
+                            </div>
+                            <div class="col-md-5" style="text-align: right;">
+                                    {{ wtf.form_field( form.must_exclude ) }}
+                            </div>
+                        </div>
+
+
+                            <div class="form-row"></div>
+                                <div style="">
+                                        {{ wtf.form_field( form.search) }}
+                                </div>
+                            </div>
+
+                            </div>
+                                    
+                            {{ form.csrf_token }}
+                            <div style="display: none;" id="loading_div" style="width:70%">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated active" role="progressbar" aria-valuenow="0"
+                                                aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                                <span class="sr-only">70% Complete</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            {% if time_taken and total_count != 0 %}
+                            <p>The top {{ num_results }} results of {{ total_count }} compounds found in {{ time_taken }} seconds</p>
+
+
+                            {% endif %}
+                                </form>
+                        </div>
+
+                <div style="display: none;" id="loading_div" style="width:70%">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated active" role="progressbar" aria-valuenow="0"
+                                aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                <span class="sr-only">70% Complete</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>  
+
+        {% for error in form.search_bar.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        </p>
+
+        {% if time_taken and total_count != 0 %}
+        <div class="row results_table center-block" style="width:70%">
+            <p>The top {{ num_results }} results of {{ total_count }} compounds found in {{ time_taken }} seconds</p>
+                <table class ="table table-striped center-block table-hover" id="dt_atomic" style="width:100%">
+                    <tr>
+                        <th class="th-sm">Score</th>
+                        <th class="th-sm">Formula</th>
+                        <th class="th-sm">ICSD Code</th>
+                        <th class="th-sm">Publication Date</th>
+                        <th class="th-sm">Title</th>
+                        <th class="th-sm">Journal Name</th>
+                        <th class="th-sm">Author</th>
+                    </tr>
+            
+                    {% for score in scores %}
+                        <tr>
+                            <th>{{ score.Score }}</th>
+                            <th>{{ score.Formula }}</th>
+                            <th>{{ score.Code }}</th>
+                            <th>{{ score.Date }}</th>
+                            <th>{{ score.Title }}</th>
+                            <th>{{ score.Journal }}</th>
+                            <th>{{ score.Author }}</th>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>  
+        </div>
+
+        {% elif  time_taken and total_count == 0 %}
+            <p>No results in database containing all these elements</p>
+        {% endif %}
+        
+    </form>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() 
+    {
+        $('#loading_div').hide();
+
+        $('form').submit(function() 
+        {   
+            // alert("Submitted");
+            $('#search_div').slideUp()
+            $('#loading_div').show("slow")
+            var i = 0;
+
+            //  create a loop function to update progress bar with fake values
+            function myLoop () {
+                setTimeout(function () {     //  call a 1s setTimeout when the loop is called
+                    update = i + Math.random()
+                    $('.progress-bar').css('width', 100 * update / 60 +'%').attr('aria-valuenow', 100 * update /60);
+                    i++;
+                    if (i < 60) {
+                        myLoop();
+                    }
+                    else {
+                        $('#loading_div').slideUp()
+                        $('#search_div').show()
+                    }
+                }, 1000)
+            }
+
+            myLoop();
+        }) 
+    })
+
+</script>
+{% endblock %}
